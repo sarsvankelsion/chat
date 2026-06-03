@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mono Chat | NgocDuyDev</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; font-family: 'JetBrains Mono', monospace; }
+        
+        body { 
+            margin: 0; 
+            padding: 10px; 
+            height: 100vh; 
+            background: linear-gradient(135deg, #050505, #121212, #1a1a1a); 
+            color: #e2e8f0; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .bar { 
+            display: flex; 
+            gap: 8px; 
+            background: rgba(255,255,255,0.02); 
+            padding: 12px; 
+            border-radius: 10px; 
+            margin-bottom: 10px; 
+            align-items: center; 
+            border: 1px solid rgba(255,255,255,0.08); 
+            flex-wrap: wrap; 
+        }
+        .bar label { font-size: 0.85rem; color: #ffffff; font-weight: bold; white-space: nowrap; }
+        .bar input { flex: 1; min-width: 150px; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 0.9rem; }
+        .bar input:focus { border-color: #ffffff; outline: none; }
+        
+        /* Button Đen Trắng Gradient */
+        .btn-blue { 
+            background: linear-gradient(90deg, #ffffff, #a3a3a3); 
+            color: #000; 
+            border: none; 
+            padding: 8px 15px; 
+            font-weight: bold; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+        }
+        .btn-blue:hover { background: linear-gradient(90deg, #e5e5e5, #737373); }
+        
+        .btn-red { 
+            background: linear-gradient(90deg, #262626, #0f0f0f); 
+            color: #ff4757; 
+            border: 1px solid #ff4757; 
+            padding: 8px 15px; 
+            font-weight: bold; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+        }
+        .btn-red:hover { background: #ff4757; color: #fff; }
+
+        .chat-box { flex: 1; display: flex; flex-direction: column; background: rgba(255,255,255,0.01); border-radius: 12px; padding: 12px; margin-bottom: 70px; border: 1px solid rgba(255,255,255,0.03); }
+        
+        /* Khung chứa tin nhắn dạng Flex Column */
+        #msgs { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 15px; 
+            background: rgba(0,0,0,0.4); 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+            font-size: 0.95rem; 
+            scroll-behavior: smooth; 
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Cấu trúc hiển thị kiểu Messenger */
+        .msg-row { 
+            display: flex; 
+            flex-direction: column; 
+            margin-bottom: 10px; 
+            max-width: 70%; 
+            word-wrap: break-word; 
+        }
+        
+        /* Tin nhắn của bản thân (Bên phải) */
+        .msg-row.me { 
+            align-self: flex-end; 
+            align-items: flex-end; 
+        }
+        /* Tin nhắn của người khác (Bên trái) */
+        .msg-row.other { 
+            align-self: flex-start; 
+            align-items: flex-start; 
+        }
+
+        .sender { font-weight: 500; font-size: 0.75rem; margin-bottom: 3px; color: #737373; }
+        .msg-row.me .sender { color: #a3a3a3; text-align: right; }
+        
+        .txt { padding: 10px 14px; font-size: 0.9rem; line-height: 1.4; display: inline-block; max-width: 100%; }
+        
+        /* Bong bóng chat của mình (Trắng gradient chữ đen) */
+        .msg-row.me .txt { 
+            background: linear-gradient(135deg, #ffffff, #d4d4d4); 
+            color: #000000; 
+            border-radius: 16px 16px 4px 16px; 
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(255,255,255,0.05);
+        }
+        /* Bong bóng chat người khác (Xám đen gradient chữ trắng) */
+        .msg-row.other .txt { 
+            background: linear-gradient(135deg, #262626, #171717); 
+            color: #ffffff; 
+            border: 1px solid #333; 
+            border-radius: 16px 16px 16px 4px; 
+        }
+
+        .inp-grp { display: flex; gap: 8px; }
+        #inp { flex: 1; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 1rem; }
+        #inp:focus { border-color: #ffffff; outline: none; }
+        
+        #send { 
+            background: linear-gradient(90deg, #ffffff, #a3a3a3); 
+            color: #000; 
+            border: none; 
+            border-radius: 8px; 
+            padding: 0 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.2s;
+        }
+        #send:hover { background: linear-gradient(90deg, #e5e5e5, #737373); }
+
+        .panic { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: #000000; color: #ff4757; border-top: 1px solid #ff4757; font-size: 1.1rem; font-weight: bold; text-transform: uppercase; z-index: 999; display: flex; align-items: center; justify-content: center; -webkit-user-select: none; user-select: none; cursor: pointer; }
+        .panic:active { background: #ff4757; color: #000; }
+        
+        #p-scr { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 10000; }
+        .blur { filter: blur(30px); pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div id="p-scr"></div>
+
+<div class="bar" id="b1">
+    <label id="lbl">Phòng: ...</label>
+    <input type="text" id="rm" placeholder="Tên phòng cần đến...">
+    <button class="btn-blue" id="btnRm">Đổi Phòng</button>
+    <button class="btn-red" id="btnNuke">XÓA SẠCH PHÒNG</button>
+</div>
+
+<div class="chat-box" id="app">
+    <div id="msgs"></div>
+    <div class="inp-grp">
+        <input type="text" id="inp" placeholder="Nhập nội dung tin nhắn..." autocomplete="off">
+        <button id="send">Gửi</button>
+    </div>
+</div>
+
+<button class="panic" id="btnPnc">NÚT HỦY PHIÊN (ESC)</button>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, setPersistence, browserSessionPersistence, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, push, onChildAdded, off, query, limitToLast, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const cfg = {
+        apiKey: "AIzaSyBoF5Ca3sJwwo30xwdYQeMi2xj5UP2WXtk",
+        authDomain: "duydev-chat.firebaseapp.com",
+        databaseURL: "https://duydev-chat-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "duydev-chat",
+        storageBucket: "duydev-chat.firebasestorage.app",
+        messagingSenderId: "86082623733",
+        appId: "1:86082623733:web:90ad1e48801281cdeb4dbc"
+    };
+
+    const au = getAuth(initializeApp(cfg));
+    const db = getDatabase();
+    setPersistence(au, browserSessionPersistence);
+
+    let myUsr = "", curRm = "", dbRef = null;
+    const box = document.getElementById('msgs'), lbl = document.getElementById('lbl');
+
+    onAuthStateChanged(au, (u) => {
+        if (!u) window.location.href = "login.html";
+        else {
+            myUsr = u.email.split('@')[0];
+            if(!curRm) swap(myUsr);
+        }
+    });
+
+    function swap(rm) {
+        if (!rm) return;
+        curRm = rm.toLowerCase().trim();
+        lbl.textContent = `Phòng: ${curRm}`;
+        box.innerHTML = "";
+        
+        if (dbRef) off(dbRef);
+        dbRef = ref(db, 'chats/' + curRm);
+        
+        const q = query(dbRef, limitToLast(100));
+        
+        onChildAdded(q, (s) => {
+            const d = s.val();
+            const oneHourAgo = Date.now() - 3600000;
+            
+            if (d.t && d.t < oneHourAgo) {
+                remove(s.ref);
+                return;
+            }
+            
+            const rawMsg = d.m || d.msg || "";
+            const senderName = d.s || d.sender || "Ẩn danh";
+            
+            if (!rawMsg) return;
+
+            const r = document.createElement('div');
+            
+            // Phân biệt tài khoản hiện tại (me) và người khác (other) để gán Class CSS
+            const isMe = (senderName.toLowerCase().trim() === myUsr.toLowerCase().trim());
+            r.className = `msg-row ${isMe ? 'me' : 'other'}`;
+            
+            r.innerHTML = `<div class="sender">${senderName}</div><div class="txt">${rawMsg}</div>`;
+            box.appendChild(r);
+            box.scrollTop = box.scrollHeight;
+        });
+    }
+
+    document.getElementById('btnRm').addEventListener('click', () => {
+        swap(document.getElementById('rm').value || curRm);
+    });
+
+    const inp = document.getElementById('inp');
+    const send = () => {
+        const v = inp.value.trim();
+        if(v && dbRef) {
+            push(dbRef, { 
+                s: myUsr, 
+                m: v, 
+                t: Date.now()
+            });
+            inp.value = '';
+        }
+    }
+    document.getElementById('send').addEventListener('click', send);
+    inp.addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
+
+    document.getElementById('btnNuke').addEventListener('click', () => {
+        if (dbRef && confirm("Xóa sạch toàn bộ lịch sử hiện tại của phòng này?")) {
+            remove(dbRef).then(() => box.innerHTML = "<p style='color:#ff4757; text-align:center;'>ĐÃ DỌN SẠCH DỮ LIỆU PHÒNG</p>");
+        }
+    });
+
+    const nuke = () => {
+        document.getElementById('p-scr').style.display = 'block';
+        signOut(au).then(() => setTimeout(() => window.location.href = "https://google.com", 400));
+    };
+    document.getElementById('btnPnc').addEventListener('touchstart', (e) => { e.preventDefault(); nuke(); });
+    document.getElementById('btnPnc').addEventListener('click', nuke);
+    window.addEventListener('keydown', (e) => { if (e.key === "Escape") nuke(); });
+
+    document.addEventListener('visibilitychange', () => {
+        const h = document.hidden;
+        document.getElementById('app').classList.toggle('blur', h);
+        document.getElementById('b1').classList.toggle('blur', h);
+        if(h) signOut(au);
+    });
+
+    let afk;
+    const reset = () => { clearTimeout(afk); afk = setTimeout(() => signOut(au), 180000); };
+    ['mousemove', 'keypress', 'click', 'touchstart'].forEach(e => window.addEventListener(e, reset));
+    reset();
+
+</script>
+</body>
+</html>
